@@ -16,6 +16,15 @@ missing_vars = [var for var in required_env_vars if not os.getenv(var)]
 if missing_vars:
     raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
+# Configuração do Google OAuth
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+GOOGLE_REDIRECT_URI = os.getenv('GOOGLE_REDIRECT_URI', 'https://auto-brief-saas.vercel.app/auth/callback')
+
+# Configuração do Groq
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'  # Chave secreta fixa para sessões
 app.config['SESSION_TYPE'] = 'filesystem'
