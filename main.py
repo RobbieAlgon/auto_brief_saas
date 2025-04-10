@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_session import Session
 from supabase import create_client, Client
-from groq.client import Groq
+from groq import Groq
 import os
 from dotenv import load_dotenv
 import json
