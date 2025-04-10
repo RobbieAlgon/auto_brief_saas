@@ -22,6 +22,20 @@ app.config['SECRET_KEY'] = 'your-secret-key-here'  # Chave secreta fixa para ses
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
+# Initialize Supabase client
+try:
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_KEY")
+    
+    if not supabase_url or not supabase_key:
+        raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in environment variables")
+    
+    supabase: Client = create_client(supabase_url, supabase_key)
+    print("Supabase client initialized successfully")
+except Exception as e:
+    print(f"Error initializing Supabase client: {str(e)}")
+    raise
+
 # Configuração do Supabase Auth
 supabase_auth = supabase.auth
 
@@ -58,20 +72,6 @@ def from_json(value):
         except:
             return value
     return value
-
-# Initialize Supabase client
-try:
-    supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_KEY")
-    
-    if not supabase_url or not supabase_key:
-        raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in environment variables")
-    
-    supabase: Client = create_client(supabase_url, supabase_key)
-    print("Supabase client initialized successfully")
-except Exception as e:
-    print(f"Error initializing Supabase client: {str(e)}")
-    raise
 
 login_manager = LoginManager()
 login_manager.init_app(app)
