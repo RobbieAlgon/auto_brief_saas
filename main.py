@@ -5,7 +5,7 @@ import groq
 import os
 from dotenv import load_dotenv
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 
 load_dotenv()
@@ -17,8 +17,9 @@ if missing_vars:
     raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'd4067f0d4e444e9dbb6d6e8f3a9d2b8a7f0d4e444e9dbb6d6e8f3a9d2b8a'
-app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutos
+app.config['SECRET_KEY'] = 'your-secret-key-here'  # Chave secreta fixa para sessões
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 # Adicionar filtro para formatar datas
 @app.template_filter('datetime')
