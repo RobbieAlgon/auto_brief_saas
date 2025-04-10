@@ -22,6 +22,18 @@ app.config['SECRET_KEY'] = 'your-secret-key-here'  # Chave secreta fixa para ses
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
+# Adicionar filtro para formatar datas
+@app.template_filter('format_date')
+def format_date(value):
+    if not value:
+        return ""
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        except ValueError:
+            return value
+    return value.strftime('%d/%m/%Y %H:%M')
+
 # Initialize Supabase client
 try:
     supabase_url = os.getenv("SUPABASE_URL")
