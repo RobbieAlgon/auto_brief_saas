@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_session import Session
 from supabase import create_client, Client
 import groq
 import os
@@ -19,9 +18,7 @@ if missing_vars:
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'd4067f0d4e444e9dbb6d6e8f3a9d2b8a7f0d4e444e9dbb6d6e8f3a9d2b8a'
-app.config['SESSION_TYPE'] = 'cookie'
 app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutos
-Session(app)
 
 # Adicionar filtro para formatar datas
 @app.template_filter('datetime')
