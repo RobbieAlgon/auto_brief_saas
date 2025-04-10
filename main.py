@@ -19,7 +19,7 @@ if missing_vars:
 # Configuração do Google OAuth
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
-GOOGLE_REDIRECT_URI = os.getenv('GOOGLE_REDIRECT_URI', 'https://auto-brief-saas.vercel.app/auth/callback')
+GOOGLE_REDIRECT_URI = os.getenv('GOOGLE_REDIRECT_URI', 'https://autobriefapi.vercel.app/auth/callback')
 
 # Configuração do Groq
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
