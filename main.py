@@ -121,9 +121,8 @@ def login():
 @app.route('/auth/google')
 def google_login():
     try:
-        # Usar uma URL dinâmica para o redirecionamento baseada no host atual
-        host = request.host_url.rstrip('/')
-        redirect_url = f"{host}/login"  # Mudamos para redirecionar para /login
+        # Usar a URL de produção para redirecionamento
+        redirect_url = 'https://autobriefapi.vercel.app/login'
         
         print(f"Redirect URL: {redirect_url}")
         
