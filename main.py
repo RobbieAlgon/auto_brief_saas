@@ -13,7 +13,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
-app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_TYPE'] = 'cookie'
 app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutos
 Session(app)
 
@@ -39,10 +39,18 @@ def from_json(value):
     return value
 
 # Initialize Supabase client
-supabase: Client = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_KEY")
-)
+try:
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_KEY")
+    
+    if not supabase_url or not supabase_key:
+        raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in environment variables")
+    
+    supabase: Client = create_client(supabase_url, supabase_key)
+    print("Supabase client initialized successfully")
+except Exception as e:
+    print(f"Error initializing Supabase client: {str(e)}")
+    raise
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -677,6 +685,13 @@ def save_briefing_route():
         import traceback
         traceback.print_exc()
         return jsonify({"error": f"Erro ao salvar briefing: {str(e)}"}), 500
+
+@app.errorhandler(Exception)
+def handle_error(error):
+    print(f"Unhandled error: {str(error)}")
+    import traceback
+    traceback.print_exc()
+    return jsonify({"error": "Internal server error", "message": str(error)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
