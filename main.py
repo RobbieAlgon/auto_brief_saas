@@ -18,9 +18,16 @@ if missing_vars:
 
 # Configuração do Flask
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'  # Chave secreta fixa para sessões
-app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+
+# Configuração do Login Manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.session_protection = 'strong'
+
+print(f"Login manager configurado com: login_view={login_manager.login_view}, session_protection={login_manager.session_protection}")
 
 # Adicionar filtro para formatar datas
 @app.template_filter('format_date')
@@ -48,17 +55,22 @@ except Exception as e:
     print(f"Error initializing Supabase client: {str(e)}")
     raise
 
+# Detectar ambiente
+IS_PRODUCTION = os.getenv('ENVIRONMENT') == 'production'
+BASE_URL = 'https://autobriefapi.vercel.app' if IS_PRODUCTION else 'http://localhost:5000'
+
 # Configuração do Supabase Auth
 supabase_auth = supabase.auth
 
 # Configuração do Google OAuth
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
-
-# Detectar ambiente
-IS_PRODUCTION = os.getenv('ENVIRONMENT') == 'production'
-BASE_URL = 'https://autobriefapi.vercel.app' if IS_PRODUCTION else 'http://localhost:5000'
 GOOGLE_REDIRECT_URI = os.getenv('GOOGLE_REDIRECT_URI', f'{BASE_URL}/auth/callback')
+
+print(f"Ambiente: {'Produção' if IS_PRODUCTION else 'Desenvolvimento'}")
+print(f"URL base: {BASE_URL}")
+print(f"Supabase URL: {supabase_url}")
+print(f"Google Redirect URI: {GOOGLE_REDIRECT_URI}")
 
 # Configuração do Groq
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
@@ -84,10 +96,6 @@ def from_json(value):
         except:
             return value
     return value
-
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
 
 class User(UserMixin):
     def __init__(self, id, email=None):
@@ -133,18 +141,28 @@ def index():
 
 @app.route('/login')
 def login():
+    print("Acessando rota de login")
+    print(f"Session antes do login: {session}")
+    print(f"Secret key configurada: {app.config['SECRET_KEY'] is not None}")
+    
     # Verificar se há um token na URL (fragmento)
     if request.args.get('access_token'):
+        print("Token encontrado na URL")
         return redirect(url_for('auth_callback', access_token=request.args.get('access_token')))
+    
+    print("Renderizando página de login")
     return render_template('login.html')
 
 @app.route('/auth/google')
 def google_login():
     try:
-        # Usar a URL baseada no ambiente
-        redirect_url = f"{BASE_URL}/login"
+        print("Iniciando login com Google")
+        # Usar a URL de redirecionamento configurada
+        redirect_url = GOOGLE_REDIRECT_URI
         
         print(f"Redirect URL: {redirect_url}")
+        print(f"Supabase URL: {supabase_url}")
+        print(f"Session antes do login Google: {session}")
         
         auth_url = supabase.auth.sign_in_with_oauth({
             "provider": "google",
@@ -156,37 +174,60 @@ def google_login():
                 }
             }
         })
+        print(f"URL de autenticação gerada: {auth_url.url}")
         return redirect(auth_url.url)
     except Exception as e:
         print(f"Error during Google login: {str(e)}")
+        import traceback
+        traceback.print_exc()
         flash(f"Error during Google login: {str(e)}")
         return redirect(url_for('login'))
 
 @app.route('/auth/callback')
 def auth_callback():
     try:
+        print("\n=== Iniciando callback de autenticação ===")
+        print(f"Request args: {dict(request.args)}")
+        print(f"Request URL: {request.url}")
+        print(f"Request path: {request.path}")
+        print(f"Request base_url: {request.base_url}")
+        print(f"Session antes do callback: {session}")
+        
         # Get the access token from the URL
         access_token = request.args.get('access_token')
         
-        print(f"Callback received with params: {dict(request.args)}")
-        print(f"Access token received: {access_token[:10] if access_token else 'None'}")
+        # Se não houver token nos argumentos, verificar se há um hash na URL
+        if not access_token and '#' in request.url:
+            print("Token não encontrado nos argumentos, mas há um hash na URL")
+            print(f"URL completa: {request.url}")
+            
+            # O token está no fragmento da URL (após o #)
+            # O Flask não consegue acessar o fragmento diretamente, então precisamos
+            # usar um template para extrair o token com JavaScript
+            return render_template('auth_callback.html')
+        
+        print(f"Access token recebido: {access_token[:10] if access_token else 'None'}")
         
         if not access_token:
+            print("Nenhum access token fornecido")
             flash("No access token provided")
             return redirect(url_for('login'))
         
         # Use the access token to get the user
         try:
+            print("Tentando obter dados do usuário com o token")
             user_data = supabase.auth.get_user(access_token)
-            print(f"User data response: {user_data}")
+            print(f"Resposta do Supabase: {user_data}")
             
             if user_data and user_data.user:
+                print("Dados do usuário obtidos com sucesso")
                 # Armazenar o email e ID na sessão
                 session['user_email'] = user_data.user.email
                 session['user_id'] = str(user_data.user.id)  # Garantir que o ID é uma string
                 
-                print(f"User authenticated: {user_data.user.id}, {user_data.user.email}")
-                print(f"Session before login: {session}")
+                print(f"Email do usuário: {user_data.user.email}")
+                print(f"ID do usuário: {user_data.user.id}")
+                print(f"Session após armazenar dados: {session}")
                 
                 # Criar o usuário com o ID e email
                 user = User(str(user_data.user.id), user_data.user.email)  # Garantir que o ID é uma string
@@ -195,20 +236,26 @@ def auth_callback():
                 # Forçar a sessão a ser salva
                 session.modified = True
                 
-                print(f"Session after login: {session}")
-                print(f"User authenticated: {current_user.is_authenticated}")
-                print(f"User ID: {current_user.id}")
+                print(f"Session após login: {session}")
+                print(f"Usuário autenticado: {current_user.is_authenticated}")
+                print(f"ID do usuário atual: {current_user.id}")
+                print("=== Fim do callback de autenticação ===\n")
                 
                 return redirect(url_for('index'))
             else:
+                print("Dados do usuário não encontrados na resposta")
                 flash("Failed to get user data")
                 return redirect(url_for('login'))
         except Exception as e:
-            print(f"Error getting user data: {str(e)}")
+            print(f"Erro ao obter dados do usuário: {str(e)}")
+            import traceback
+            traceback.print_exc()
             flash(f"Error getting user data: {str(e)}")
             return redirect(url_for('login'))
     except Exception as e:
-        print(f"Error processing access token: {str(e)}")
+        print(f"Erro no callback de autenticação: {str(e)}")
+        import traceback
+        traceback.print_exc()
         flash(f"Error processing access token: {str(e)}")
         return redirect(url_for('login'))
 

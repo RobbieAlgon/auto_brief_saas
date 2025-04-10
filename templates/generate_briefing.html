@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Gerar Briefing - AutoBrief{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card fade-in">
+            <div class="card-body">
+                <h1 class="h3 mb-4 text-center">Gerar Novo Briefing</h1>
+                
+                <form method="POST" class="needs-validation" novalidate>
+                    <div class="mb-4">
+                        <label for="conversation" class="form-label">Cole sua conversa aqui</label>
+                        <textarea class="form-control" id="conversation" name="conversation" rows="10" required></textarea>
+                        <div class="form-text">Cole o texto da conversa que você deseja transformar em briefing.</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-magic me-2"></i>Gerar Briefing
+                        </button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Validação do formulário
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %} 
