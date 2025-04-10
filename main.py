@@ -12,13 +12,13 @@ from groq import Groq
 load_dotenv()
 
 # Validar variáveis de ambiente necessárias
-required_env_vars = ['SUPABASE_URL', 'SUPABASE_KEY', 'GROQ_API_KEY']
+required_env_vars = ['SUPABASE_URL', 'SUPABASE_KEY', 'GROQ_API_KEY', 'FLASK_SECRET_KEY']
 missing_vars = [var for var in required_env_vars if not os.getenv(var)]
 if missing_vars:
     raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.urandom(24)
+app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
 app.config['SESSION_TYPE'] = 'cookie'
 app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutos
 Session(app)
