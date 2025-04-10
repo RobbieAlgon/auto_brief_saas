@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Meus Briefings{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Meus Briefings</h1>
+        <a href="{{ url_for('generate') }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Gerar Novo Briefing
+        </a>
+    </div>
+    
+    {% if briefings %}
+        <div class="space-y-4">
+            {% for briefing in briefings %}
+                <div class="border rounded-lg p-4 hover:bg-gray-50">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-semibold">{{ briefing.titulo }}</h3>
+                            <p class="text-sm text-gray-500">
+                                Criado em: {{ briefing.created_at|datetime }}
+                            </p>
+                            <p class="text-xs text-gray-400">
+                                ID: {{ briefing.id }}
+                            </p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <a href="{{ url_for('view_briefing', id=briefing.id) }}" 
+                               class="text-blue-500 hover:text-blue-700">
+                                Ver Detalhes
+                            </a>
+                            <a href="{{ url_for('delete_briefing', id=briefing.id) }}" 
+                               class="text-red-500 hover:text-red-700"
+                               onclick="return confirm('Tem certeza que deseja excluir este briefing?')">
+                                Excluir
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-8">
+            <p class="text-gray-500">Você ainda não tem nenhum briefing.</p>
+            <a href="{{ url_for('generate') }}" class="text-blue-500 hover:text-blue-700 mt-2 inline-block">
+                Gerar seu primeiro briefing
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

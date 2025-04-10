@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autenticando...</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="text-center">
+        <h1 class="text-2xl font-bold mb-4">Autenticando...</h1>
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+        <p id="status" class="mt-4 text-gray-600">Processando autenticação...</p>
+    </div>
+
+    <script>
+        // Função para extrair parâmetros da URL
+        function getUrlParams() {
+            const params = {};
+            const hash = window.location.hash.substring(1);
+            const search = window.location.search.substring(1);
+            
+            console.log("Hash:", hash);
+            console.log("Search:", search);
+            
+            // Processar fragmento da URL
+            if (hash) {
+                const hashParams = new URLSearchParams(hash);
+                for (const [key, value] of hashParams.entries()) {
+                    params[key] = value;
+                    console.log(`Param from hash: ${key}=${value}`);
+                }
+            }
+            
+            // Processar query string
+            if (search) {
+                const searchParams = new URLSearchParams(search);
+                for (const [key, value] of searchParams.entries()) {
+                    params[key] = value;
+                    console.log(`Param from search: ${key}=${value}`);
+                }
+            }
+            
+            return params;
+        }
+
+        // Função principal
+        function handleAuth() {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = "Extraindo token de acesso...";
+            
+            const params = getUrlParams();
+            const accessToken = params.access_token;
+            
+            if (accessToken) {
+                statusElement.textContent = "Token encontrado, redirecionando...";
+                console.log("Access token found:", accessToken.substring(0, 10) + "...");
+                
+                // Redirecionar para a rota de callback com o token
+                window.location.href = `/auth/callback?access_token=${accessToken}`;
+            } else {
+                statusElement.textContent = "Token não encontrado, redirecionando para login...";
+                console.log("No access token found in URL");
+                
+                // Se não houver token, redirecionar para a página de login
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+            }
+        }
+
+        // Executar quando a página carregar
+        window.onload = handleAuth;
+    </script>
+</body>
+</html> 

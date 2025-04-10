@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Gerar Briefing{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Gerar Novo Briefing</h1>
+        <a href="{{ url_for('history') }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+            Voltar para Histórico
+        </a>
+    </div>
+
+    <div class="mb-6">
+        <p class="text-gray-600 mb-4">
+            Cole a conversa que deseja transformar em um briefing profissional.
+        </p>
+        
+        <form id="briefingForm" class="space-y-4">
+            <div>
+                <label for="conversation" class="block text-sm font-medium text-gray-700 mb-2">Conversa</label>
+                <textarea id="conversation" name="conversation" rows="10" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Cole a conversa aqui..."></textarea>
+            </div>
+            
+            <div class="flex justify-end">
+                <button type="submit" id="generateBtn" 
+                        class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Gerar Briefing
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div id="resultContainer" class="hidden mt-6 border rounded-lg p-4">
+        <h2 class="text-xl font-semibold mb-4">Briefing Gerado</h2>
+        <div id="briefingResult" class="bg-gray-50 p-4 rounded-md whitespace-pre-wrap"></div>
+        
+        <div class="flex justify-end mt-4 space-x-2">
+            <button id="saveBtn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                Salvar Briefing
+            </button>
+            <button id="copyBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                Copiar
+            </button>
+            <button id="downloadBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Download
+            </button>
+        </div>
+    </div>
+    
+    <div id="loadingIndicator" class="hidden mt-6 text-center">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        <p class="mt-2 text-gray-600">Gerando briefing...</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('briefingForm');
+    const conversationInput = document.getElementById('conversation');
+    const generateBtn = document.getElementById('generateBtn');
+    const resultContainer = document.getElementById('resultContainer');
+    const briefingResult = document.getElementById('briefingResult');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    
+    let currentBriefing = null;
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const conversation = conversationInput.value.trim();
+        if (!conversation) {
+            alert('Por favor, insira uma conversa para gerar o briefing.');
+            return;
+        }
+        
+        // Mostrar indicador de carregamento
+        loadingIndicator.classList.remove('hidden');
+        resultContainer.classList.add('hidden');
+        generateBtn.disabled = true;
+        
+        try {
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ conversation }),
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Armazenar o briefing atual
+                currentBriefing = data;
+                
+                // Exibir o resultado
+                briefingResult.textContent = JSON.stringify(data, null, 2);
+                resultContainer.classList.remove('hidden');
+            } else {
+                alert(`Erro: ${data.error || 'Falha ao gerar briefing'}`);
+            }
+        } catch (error) {
+            alert('Erro ao conectar com o servidor.');
+            console.error('Erro:', error);
+        } finally {
+            // Esconder indicador de carregamento
+            loadingIndicator.classList.add('hidden');
+            generateBtn.disabled = false;
+        }
+    });
+    
+    // Função para salvar o briefing
+    saveBtn.addEventListener('click', async function() {
+        if (!currentBriefing) {
+            alert('Nenhum briefing para salvar.');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/save_briefing', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    input_text: conversationInput.value.trim(),
+                    briefing_result: currentBriefing
+                }),
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert('Briefing salvo com sucesso!');
+                window.location.href = '/history';
+            } else {
+                alert(`Erro ao salvar briefing: ${data.error || 'Erro desconhecido'}`);
+            }
+        } catch (error) {
+            alert('Erro ao conectar com o servidor.');
+            console.error('Erro:', error);
+        }
+    });
+    
+    // Função para copiar o briefing
+    copyBtn.addEventListener('click', function() {
+        const text = briefingResult.textContent;
+        navigator.clipboard.writeText(text).then(function() {
+            alert('Briefing copiado para a área de transferência!');
+        }).catch(function(err) {
+            console.error('Erro ao copiar texto: ', err);
+            alert('Erro ao copiar o briefing.');
+        });
+    });
+    
+    // Função para download do briefing
+    downloadBtn.addEventListener('click', function() {
+        const text = briefingResult.textContent;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'briefing.txt';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    });
+});
+</script>
+{% endblock %} 

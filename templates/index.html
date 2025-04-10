@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">Welcome to Briefing Generator</h1>
+    <p class="text-xl text-gray-600 mb-8">Transform your conversations into professional briefings</p>
+    
+    {% if current_user.is_authenticated %}
+        <div class="space-x-4">
+            <a href="{{ url_for('generate') }}" 
+               class="inline-block bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600">
+                Generate New Briefing
+            </a>
+            <a href="{{ url_for('history') }}" 
+               class="inline-block bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600">
+                View My Briefings
+            </a>
+        </div>
+    {% else %}
+        <a href="{{ url_for('login') }}" 
+           class="inline-block bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600">
+            Login with Google
+        </a>
+    {% endif %}
+</div>
+{% endblock %} 

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes do Briefing{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Detalhes do Briefing</h1>
+        <div class="flex space-x-2">
+            <a href="{{ url_for('list_briefings') }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                Voltar para Lista
+            </a>
+            <a href="{{ url_for('generate') }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Gerar Novo Briefing
+            </a>
+        </div>
+    </div>
+    
+    <div class="mb-6">
+        <p class="text-sm text-gray-500">
+            Criado em: {{ briefing.created_at|datetime }}
+        </p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="border rounded-lg p-4">
+            <h3 class="font-semibold mb-2">Texto Original</h3>
+            <div class="bg-gray-50 p-3 rounded whitespace-pre-wrap">
+                {{ briefing.input_text }}
+            </div>
+        </div>
+        
+        <div class="border rounded-lg p-4">
+            <h3 class="font-semibold mb-2">Briefing Gerado</h3>
+            <div class="bg-gray-50 p-3 rounded">
+                {% set briefing_result = briefing.briefing_result %}
+                
+                {% if briefing_result.objetivo is defined %}
+                    <h4 class="font-medium">Objetivo</h4>
+                    <p class="mb-3">{{ briefing_result.objetivo }}</p>
+                {% endif %}
+                
+                {% if briefing_result.publico_alvo is defined %}
+                    <h4 class="font-medium">Público-Alvo</h4>
+                    <p class="mb-3">{{ briefing_result.publico_alvo }}</p>
+                {% endif %}
+                
+                {% if briefing_result.referencias is defined and briefing_result.referencias %}
+                    <h4 class="font-medium">Referências</h4>
+                    <ul class="list-disc pl-5 mb-3">
+                        {% for ref in briefing_result.referencias %}
+                            <li>{{ ref }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                
+                {% if briefing_result.prazos is defined %}
+                    <h4 class="font-medium">Prazos</h4>
+                    {% if briefing_result.prazos.entrega_final is defined %}
+                        <p class="mb-1">Entrega Final: {{ briefing_result.prazos.entrega_final }}</p>
+                    {% endif %}
+                    {% if briefing_result.prazos.etapas_intermediarias is defined and briefing_result.prazos.etapas_intermediarias %}
+                        <p class="mb-1">Etapas Intermediárias:</p>
+                        <ul class="list-disc pl-5 mb-3">
+                            {% for etapa in briefing_result.prazos.etapas_intermediarias %}
+                                <li>{{ etapa }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endif %}
+                
+                {% if briefing_result.orcamento is defined %}
+                    <h4 class="font-medium">Orçamento</h4>
+                    {% if briefing_result.orcamento.valor_total is defined %}
+                        <p class="mb-1">Valor Total: R$ {{ "%.2f"|format(briefing_result.orcamento.valor_total) }}</p>
+                    {% endif %}
+                    {% if briefing_result.orcamento.descontos is defined %}
+                        <p class="mb-1">Descontos: R$ {{ "%.2f"|format(briefing_result.orcamento.descontos) }}</p>
+                    {% endif %}
+                    {% if briefing_result.orcamento.valor_final is defined %}
+                        <p class="mb-3">Valor Final: R$ {{ "%.2f"|format(briefing_result.orcamento.valor_final) }}</p>
+                    {% endif %}
+                {% endif %}
+                
+                {% if briefing_result.observacoes is defined and briefing_result.observacoes %}
+                    <h4 class="font-medium">Observações</h4>
+                    <ul class="list-disc pl-5">
+                        {% for obs in briefing_result.observacoes %}
+                            <li>{{ obs }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
