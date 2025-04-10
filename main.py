@@ -1,13 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_session import Session
-import os
 from supabase import create_client, Client
+from groq.client import Groq
+import os
 from dotenv import load_dotenv
 import json
 from datetime import datetime
 import requests
-from groq import Groq
 
 load_dotenv()
 
