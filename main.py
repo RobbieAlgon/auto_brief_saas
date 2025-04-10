@@ -11,6 +11,12 @@ from groq import Groq
 
 load_dotenv()
 
+# Validar variáveis de ambiente necessárias
+required_env_vars = ['SUPABASE_URL', 'SUPABASE_KEY', 'GROQ_API_KEY']
+missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
 app.config['SESSION_TYPE'] = 'cookie'
@@ -88,7 +94,15 @@ def load_user(user_id):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    try:
+        print("Accessing index route")
+        print(f"Environment variables present: SUPABASE_URL={bool(os.getenv('SUPABASE_URL'))}, SUPABASE_KEY={bool(os.getenv('SUPABASE_KEY'))}, GROQ_API_KEY={bool(os.getenv('GROQ_API_KEY'))}")
+        return render_template('index.html')
+    except Exception as e:
+        print(f"Error in index route: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Internal server error", "message": str(e)}), 500
 
 @app.route('/login')
 def login():
@@ -206,7 +220,16 @@ def generate_briefing(conversation):
         print(f"Gerando briefing para conversa: {conversation[:100]}...")
         
         # Inicializar o cliente Groq
-        client = Groq()
+        try:
+            groq_api_key = os.getenv("GROQ_API_KEY")
+            if not groq_api_key:
+                raise ValueError("GROQ_API_KEY environment variable is not set")
+            
+            client = Groq(api_key=groq_api_key)
+            print("Groq client initialized successfully")
+        except Exception as e:
+            print(f"Error initializing Groq client: {str(e)}")
+            raise
         
         # Prompt para a API Groq
         completion = client.chat.completions.create(
