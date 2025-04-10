@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_session import Session
 from supabase import create_client, Client
-from groq.client import Groq
+from groq import Groq
 import os
 from dotenv import load_dotenv
 import json
@@ -225,7 +225,7 @@ def generate_briefing(conversation):
             if not groq_api_key:
                 raise ValueError("GROQ_API_KEY environment variable is not set")
             
-            client = Groq(api_key=groq_api_key)
+            client = Groq()
             print("Groq client initialized successfully")
         except Exception as e:
             print(f"Error initializing Groq client: {str(e)}")
